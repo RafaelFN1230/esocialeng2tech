@@ -5,9 +5,10 @@ import pandas as pd
 
 def extrair_tabela(filePDF, pagIni, pagFin):  
     pdf = filePDF
-    date = [] 
+    years = [] 
     dataset = {}
     excel_path = "planilha-ficha_financeira ("+pagIni+"-"+pagFin+").xlsx"
+    current_year = None
 
     for pag in range(int(pagIni)-1, int(pagFin)):
         pagina = pdf.pages[pag]
@@ -22,15 +23,16 @@ def extrair_tabela(filePDF, pagIni, pagFin):
             elif coluna.count(None) == len(coluna)-1:
                 pass
             elif 'JAN/' in coluna[1]:
-                if coluna[1] not in date:
+                periodo = coluna[1].split('/')
+                if int(periodo[1]) not in years:
                     coluna[0] = 'PERÍODO'
-                    _add_element(dataset, coluna[0], coluna)
-                    for celula in coluna:
-                        date.append(celula)
+                    _add_element(dataset, coluna[0], coluna, 0, 0)
+                    current_year = int(periodo[1])
+                    years.append(current_year)
                 unwanted_columns.append(index)
         dados = _dataset_cleaner(tabela, unwanted_columns)
         for dado in dados:
-            _add_element(dataset, dado[0], dado)
+            _add_element(dataset, dado[0], dado, years[0], current_year)
 
     final_daset = _create_list(dataset)
     _generate_excel(final_daset['chaves'], final_daset['elementos'], excel_path)
@@ -54,12 +56,13 @@ def _generate_excel(chaves, elementos, excel_path):
     df.to_excel(excel_path, sheet_name="eSocial", index=False, header=False)
 
 
-def _add_element(dicionario, chave, elementos:list):
+def _add_element(dicionario, chave, elementos:list, first_year, current_year):
     if chave in dicionario:
         for elemento in elementos:
             if elemento != chave:
                 dicionario[chave].append(elemento)
     else:
+        elementos = _fix_timeline(elementos, first_year, current_year)
         dicionario[chave] = elementos
 
 
@@ -72,3 +75,11 @@ def _create_list(dictionary:dict):
         elementos.append(valores)
     list = {'chaves':chaves, 'elementos':elementos}
     return list
+
+def _fix_timeline(elementos:list, first_year:int, current_year:int):
+    difference_in_years = current_year - first_year
+    n_linhas = (difference_in_years*len(elementos))-difference_in_years
+    if difference_in_years>0:
+        for _ in range(n_linhas):
+            elementos.insert(1, '')
+    return elementos
