@@ -3,7 +3,7 @@ from tkinter import *
 from tkinter import filedialog
 import pdfplumber
 
-from funcoes import extrair_tabela
+from src.use_cases.extract_table import extrair_tabela
 caminho_PDF = ""
 
 def obter_dados():
