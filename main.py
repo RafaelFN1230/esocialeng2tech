@@ -4,47 +4,70 @@ from tkinter import filedialog
 import pdfplumber
 
 from src.use_cases.extract_table import extrair_tabela
-caminho_PDF = ""
+from src.errors.errors import *
+from src.errors.validate_data import validate_user_input_data, validate_user_input_file
 
-def obter_dados():
-    global caminho_PDF
+class use_case_input:
+    def __init__(self) -> None:
+        self.caminho_PDF = ""
+        self.excecoes_personalizadas = (
+            MissingUserInputFile,
+            MissingUserInput,
+            OutOfBoundsFinal,
+            OutOfBoundsInicial,
+            InicialPageBiggerThanFinalPage,
+            WrongUsersInputDataType,
+            WrongUsersInputFileType,
+            )
 
-    btnSelecionarPDF.config(state=DISABLED)
+    def obter_dados(self):
+        btnSelecionarPDF.config(state=DISABLED)
 
-    status_label.config(text="Selecione o PDF ... Por favor!")
+        status_label.config(text="Por favor, selecione um PDF")
 
-    try:
-        # Abrir o arquivo PDF
-        caminho_PDF = pdfplumber.open(filedialog.askopenfilename(title="Selecione o arquivo PDF"))
+        try:
+            # Abrir o arquivo PDF
+            selected_file = filedialog.askopenfilename(title="Selecione o arquivo PDF")
+            validate_user_input_file(selected_file)
+            self.caminho_PDF = pdfplumber.open(selected_file)
 
-        vPagIni.set(1)
-        vPagFin.set(len(caminho_PDF.pages))
+            vPagIni.set(1)
+            vPagFin.set(len(self.caminho_PDF.pages))
 
-        status_label.config(text="PDF selecionado com sucesso!")
+            status_label.config(text="PDF selecionado com sucesso!")
 
-    except Exception as e:
-        status_label.config(text=f"Erro: {str(e)}")
+        except self.excecoes_personalizadas as e:
+            status_label.config(text=e.message)
+            
+        except Exception as e:
+            status_label.config(text=f"Erro: {str(e)}")
 
-    btnSelecionarPDF.config(state=NORMAL)
+        btnSelecionarPDF.config(state=NORMAL)
 
-def extrair_xlsx():
-    global caminho_PDF
+    def extrair_xlsx(self):
+        btnSelecionarPDF.config(state=DISABLED)
+        btnGerarPDF.config(state=DISABLED)
 
-    btnSelecionarPDF.config(state=DISABLED)
-    btnGerarPDF.config(state=DISABLED)
+        status_label.config(text="Extraindo dados... Por favor, aguarde.")
 
-    status_label.config(text="Extraindo dados... Por favor, aguarde.")
+        try:
+            validate_user_input_file(self.caminho_PDF)
+            validate_user_input_data(vPagIni.get(), vPagFin.get(), vPagTotal=len(self.caminho_PDF.pages))
 
-    try:
-        extrair_tabela(caminho_PDF, vPagIni.get(), vPagFin.get())
+            extrair_tabela(self.caminho_PDF, vPagIni.get(), vPagFin.get())
 
-        status_label.config(text="Extração concluída com sucesso!")
+            status_label.config(text="Extração concluída com sucesso!")
 
-    except Exception as e:
-        status_label.config(text=f"Erro: {str(e)}")
+        except self.excecoes_personalizadas as e:
+            status_label.config(text=e.message)
 
-    btnSelecionarPDF.config(state=NORMAL)
-    btnGerarPDF.config(state=NORMAL)
+        except Exception as e:
+            status_label.config(text=f"Erro: {str(e)}")
+
+        btnSelecionarPDF.config(state=NORMAL)
+        btnGerarPDF.config(state=NORMAL)
+
+UseCaseInput= use_case_input()
 
 app = Tk()
 app.geometry("300x200") 
@@ -73,11 +96,11 @@ entPagFin = Entry(frQuadro, textvariable=vPagFin)
 entPagFin.place(x=180, y=60, width=55)
 
 # Dados Botão Selecionar - Label e Button
-btnSelecionarPDF = Button(app, text="Selecionar PDF", background="#558", command=obter_dados)
+btnSelecionarPDF = Button(app, text="Selecionar PDF", background="#558", command=UseCaseInput.obter_dados)
 btnSelecionarPDF.place(x=50, y=130)
 
 # Dados Botão Selecionar - Label e Button
-btnGerarPDF = Button(app, text="Gerar PDF", background="#fff", command=extrair_xlsx)
+btnGerarPDF = Button(app, text="Gerar PDF", background="#fff", command=UseCaseInput.extrair_xlsx)
 btnGerarPDF.place(x=170, y=130)
 
 status_label = Label(app, text="Aguardando processamento ...")
