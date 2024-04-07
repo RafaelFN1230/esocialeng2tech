@@ -1,15 +1,17 @@
 #pip install pdfplumber
 #python.exe -m pip install --upgrade pip
+import pdfplumber
+import os
+from src.data.utils.util import get_filename
 from src.entities.excel_entity import generate_excel
 from src.data.builder.data_builder import create_list
 from src.data.controller.data_controller import add_element, dataset_cleaner
 
-def extrair_tabela(filePDF, pagIni, pagFin):  
+def extrair_tabela(filePDF:pdfplumber.pdf.PDF, pagIni, pagFin):  
     pdf = filePDF
     years = [] 
-    excel_path = "planilha-ficha_financeira ("+pagIni+"-"+pagFin+").xlsx"
     current_year = None
-
+    excel_path = get_filename(filePDF, pagIni, pagFin)
     dataset = {
         'periodo':{
             'elementos': {}
