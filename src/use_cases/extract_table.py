@@ -3,6 +3,7 @@
 from src.entities.excel_entity import generate_excel
 from src.data.builder.data_builder import create_list
 from src.data.controller.data_controller import add_element, dataset_cleaner
+
 def extrair_tabela(filePDF, pagIni, pagFin):  
     pdf = filePDF
     years = [] 
