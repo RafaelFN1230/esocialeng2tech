@@ -35,14 +35,14 @@ def extrair_tabela(filePDF:pdfplumber.pdf.PDF, pagIni, pagFin):
         unwanted_columns = []
         dataset['descontos']['status'] = False
         for index, coluna in enumerate(tabela):
+            periodo = coluna[1].split('/') if coluna[1] != None else ''
             if coluna[0].lower() in ['dados bancários', 'banco', 'agência', 'conta']:
                 unwanted_columns.append(index)
             elif coluna.count('') == len(coluna):
                 unwanted_columns.append(index)
             elif coluna.count(None) == len(coluna)-1:
                 pass
-            elif 'JAN/' in coluna[1]:
-                periodo = coluna[1].split('/')
+            elif periodo[0] in ['JAN', 'FEV', 'MAR', 'ABR', 'MAIO', 'JUN', 'JUL', 'AGO', 'SET', 'OUT', 'NOV', 'DEZ']:
                 if int(periodo[1]) not in years:
                     coluna[0] = 'PERÍODO'
                     add_element(dataset, coluna[0], coluna, 0, 0)

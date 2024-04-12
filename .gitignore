@@ -1,4 +1,7 @@
 kaun
 __pycache__
 .pyc
+.xlsx
+.pdf
+db
 **/__pycache__/
